@@ -92,6 +92,13 @@ public struct ViewportTransform: TransformProtocol {
     }
 }
 
+extension ViewportTransform: Equatable {
+    @inlinable
+    public static func == (lhs: ViewportTransform, rhs: ViewportTransform) -> Bool {
+        lhs.scale == rhs.scale && lhs.translate == rhs.translate
+    }
+}
+
 public struct VolumeTransform: TransformProtocol {
     public typealias Scalar = Double
 
