@@ -50,6 +50,38 @@ public class ForceDirectedGraphState: Observation.Observable {
         }
     }
 
+    // MARK: - Position Tracking
+
+    @usableFromInline
+    internal var _nodePositions: [AnyHashable: SIMD2<Double>] = [:]
+
+    @inlinable
+    public var nodePositions: [AnyHashable: SIMD2<Double>] {
+        _nodePositions
+    }
+
+    @usableFromInline
+    internal func updateNodePositions<NodeID: Hashable>(_ positions: [NodeID: SIMD2<Double>]) {
+        _nodePositions = positions.reduce(into: [:]) {
+            $0[AnyHashable($1.key)] = $1.value
+        }
+    }
+
+    // MARK: - Simulation State
+
+    @usableFromInline
+    internal var _simulationAlpha: Double = 1.0
+
+    @inlinable
+    public var simulationAlpha: Double {
+        _simulationAlpha
+    }
+
+    @usableFromInline
+    internal func updateSimulationAlpha(_ alpha: Double) {
+        _simulationAlpha = alpha
+    }
+
     @inlinable
     public init(
         initialIsRunning: Bool = true,

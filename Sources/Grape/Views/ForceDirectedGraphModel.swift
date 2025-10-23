@@ -314,6 +314,14 @@ extension ForceDirectedGraphModel {
         withMutation(keyPath: \.currentFrame) {
             simulationContext.storage.tick()
             currentFrame += 1
+
+            // Update positions in shared state
+            var positions: [NodeID: SIMD2<Double>] = [:]
+            for (nodeId, index) in simulationContext.nodeIndexLookup {
+                positions[nodeId] = simulationContext.storage.kinetics.position[index]
+            }
+            stateMixinRef.updateNodePositions(positions)
+            stateMixinRef.updateSimulationAlpha(simulationContext.storage.kinetics.alpha)
         }
         _onTicked?(currentFrame)
     }
