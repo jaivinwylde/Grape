@@ -152,6 +152,9 @@ public final class ForceDirectedGraphModel<Content: GraphContent> {
     var _onSimulationStabilized: (() -> Void)? = nil
 
     @usableFromInline
+    var _onBackgroundPanChanged: ((SIMD2<Double>) -> Void)? = nil
+
+    @usableFromInline
     var _emittingNewNodesWith: (NodeID) -> KineticState
 
     @usableFromInline

@@ -44,6 +44,9 @@ import simd
                     model.modelTransform.translate += delta
                     model.backgroundDragStart = value.location.simd
 
+                    // Notify callback of background pan delta
+                    model._onBackgroundPanChanged?(delta)
+
                     // Track velocity for momentum
                     if let lastPos = model.lastDragPosition, let lastTime = model.lastDragTime {
                         let positionDelta = value.location.simd - lastPos
@@ -312,6 +315,14 @@ extension ForceDirectedGraph {
     public func onGraphMagnified(
         perform action: @escaping () -> Void
     ) -> Self {
+        return self
+    }
+
+    @inlinable
+    public func onBackgroundPanChanged(
+        perform action: @escaping (SIMD2<Double>) -> Void
+    ) -> Self {
+        self.model._onBackgroundPanChanged = action
         return self
     }
 
