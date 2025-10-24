@@ -30,6 +30,10 @@ extension ForceDirectedGraphModel {
     internal func findNode(
         at locationInViewportCoordinate: CGPoint
     ) -> NodeID? {
+        // Don't detect nodes when physics stopped (frozen layout should not be draggable)
+        // This allows pan gestures to work everywhere, including over entities
+        guard stateMixinRef.isRunning else { return nil }
+
         let simulationLocation = self.finalTransform.invert(locationInViewportCoordinate.simd)
         return findNode(at: simulationLocation)
     }
