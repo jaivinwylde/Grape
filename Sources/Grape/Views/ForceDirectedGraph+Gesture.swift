@@ -128,6 +128,12 @@ import simd
         internal func onTapGesture(
             _ location: CGPoint
         ) {
+            // Stop any ongoing momentum on tap (iOS standard behavior)
+            if model.momentumTimer != nil {
+                stopMomentumAnimation()
+            }
+
+            // Original tap handling
             guard let action = self.model._onNodeTapped else { return }
             let nodeID = self.model.findNode(at: location)
             action(nodeID)
