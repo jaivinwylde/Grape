@@ -51,6 +51,20 @@ public final class ForceDirectedGraphModel<Content: GraphContent> {
     @usableFromInline
     var backgroundDragStart: SIMD2<Double>? = nil
 
+    // MARK: - Velocity Tracking for Momentum
+
+    @usableFromInline
+    var lastDragPosition: SIMD2<Double>? = nil
+
+    @usableFromInline
+    var lastDragTime: Date? = nil
+
+    @usableFromInline
+    var dragVelocity: SIMD2<Double> = .zero
+
+    @usableFromInline
+    var momentumTimer: Timer? = nil
+
     @inlinable
     var isDragStartStateRecorded: Bool {
         return draggingNodeID != nil || backgroundDragStart != nil
@@ -258,6 +272,7 @@ public final class ForceDirectedGraphModel<Content: GraphContent> {
     deinit {
         _ = MainActor.assumeIsolated {
             scheduledTimer?.invalidate()
+            momentumTimer?.invalidate()
         }
     }
 
