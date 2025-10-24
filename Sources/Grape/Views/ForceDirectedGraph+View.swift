@@ -69,19 +69,9 @@ extension ForceDirectedGraph: View {
             self.model.render(&context, size)
         }
 #if !os(tvOS)
-        .simultaneousGesture(
-            // Immediate touch detection for stopping momentum
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    // Stop momentum on first touch (before any movement)
-                    if self.model.momentumTimer != nil {
-                        self.stopMomentumAnimation()
-                    }
-                }
-        )
         .gesture(
             DragGesture(
-                minimumDistance: Self.minimumDragDistance,
+                minimumDistance: 0,  // Fire immediately on touch for momentum stop
                 coordinateSpace: .local
             )
             .onChanged(onDragChange)

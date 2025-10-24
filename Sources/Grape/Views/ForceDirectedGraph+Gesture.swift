@@ -120,7 +120,7 @@ import simd
         }
 
         @inlinable
-        static var minimumDragDistance: CGFloat { 3.0 }
+        static var minimumDragDistance: CGFloat { 0.0 }  // Immediate touch for momentum stop
     }
     @MainActor
     extension ForceDirectedGraph {
