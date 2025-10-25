@@ -227,10 +227,31 @@ import simd
             let alpha = (startTransform.translate(by: self.model.obsoleteState.cgSize.simd / 2))
                 .invert(value.startLocation.simd)
 
-            let newScale = clamp(
+            var newScale = clamp(
                 value.magnification * startTransform.scale,
                 min: Self.minimumScale,
                 max: Self.maximumScale)
+
+            // Calculate velocity
+            let now = Date()
+            let timeDelta = now.timeIntervalSince(model.lastMagnifyTime)
+            if timeDelta > 0 {
+                let scaleDelta = newScale - model.lastMagnifyScale
+                model.magnifyVelocity = scaleDelta / timeDelta
+            }
+            model.lastMagnifyScale = newScale
+            model.lastMagnifyTime = now
+
+            // Apply velocity-aware magnetic pull
+            if let snapPoints = model.zoomSnapPoints {
+                newScale = applyVelocityAwareMagneticPull(
+                    to: newScale,
+                    velocity: abs(model.magnifyVelocity),
+                    snapPoints: snapPoints,
+                    radius: model.zoomSnapMagnetRadius,
+                    baseStrength: model.zoomSnapMagnetStrength
+                )
+            }
 
             let newTranslate = (startTransform.scale - newScale) * alpha + startTransform.translate
 
@@ -259,10 +280,18 @@ import simd
             let alpha = (startTransform.translate(by: self.model.obsoleteState.cgSize.simd / 2))
                 .invert(value.startLocation.simd)
 
-            let newScale = clamp(
+            var newScale = clamp(
                 value.magnification * startTransform.scale,
                 min: Self.minimumScale,
                 max: Self.maximumScale)
+
+            // Snap to nearest point on gesture end (hard snap)
+            if let snapPoints = model.zoomSnapPoints {
+                newScale = snapToNearest(scale: newScale, snapPoints: snapPoints)
+            }
+
+            // Reset velocity tracking
+            model.magnifyVelocity = 0.0
 
             let newTranslate = (startTransform.scale - newScale) * alpha + startTransform.translate
             let newModelTransform = ViewportTransform(
@@ -273,6 +302,47 @@ import simd
             self.model.modelTransform = newModelTransform
             guard let action = self.model._onGraphMagnified else { return }
             action()
+        }
+
+        @inlinable
+        private func applyVelocityAwareMagneticPull(
+            to scale: Double,
+            velocity: Double,
+            snapPoints: [Double],
+            radius: Double,
+            baseStrength: Double
+        ) -> Double {
+            // Find nearest snap point
+            guard let nearestSnap = snapPoints.min(by: { abs($0 - scale) < abs($1 - scale) }) else {
+                return scale
+            }
+
+            let distance = abs(scale - nearestSnap)
+
+            // Outside magnetic radius: no pull
+            guard distance < radius else { return scale }
+
+            // Calculate velocity damping (fast pinch = less pull)
+            // velocity range: 0-10 (typical), normalize to 0-1
+            let normalizedVelocity = min(velocity / 5.0, 1.0)
+            let velocityDamping = 1.0 - (normalizedVelocity * 0.6) // Max 60% reduction
+
+            // Distance-based strength (closer = stronger)
+            let normalizedDistance = distance / radius
+            let distanceMultiplier = normalizedDistance < 0.3
+                ? 2.0  // Very close: double strength
+                : 1.0  // Normal range
+
+            // Combined pull strength
+            let effectiveStrength = baseStrength * velocityDamping * distanceMultiplier
+
+            // Apply pull
+            return scale + (nearestSnap - scale) * effectiveStrength
+        }
+
+        @inlinable
+        private func snapToNearest(scale: Double, snapPoints: [Double]) -> Double {
+            snapPoints.min(by: { abs($0 - scale) < abs($1 - scale) }) ?? scale
         }
     }
 #endif
@@ -323,6 +393,18 @@ extension ForceDirectedGraph {
         perform action: @escaping (SIMD2<Double>) -> Void
     ) -> Self {
         self.model._onBackgroundPanChanged = action
+        return self
+    }
+
+    @inlinable
+    public func zoomSnapping(
+        points: [Double],
+        magnetRadius: Double = 0.15,
+        magnetStrength: Double = 0.4
+    ) -> Self {
+        self.model.zoomSnapPoints = points
+        self.model.zoomSnapMagnetRadius = magnetRadius
+        self.model.zoomSnapMagnetStrength = magnetStrength
         return self
     }
 

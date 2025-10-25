@@ -160,6 +160,26 @@ public final class ForceDirectedGraphModel<Content: GraphContent> {
     @usableFromInline
     var _onGraphMagnified: (() -> Void)? = nil
 
+    // MARK: - Zoom Snapping Configuration
+
+    @usableFromInline
+    var zoomSnapPoints: [Double]? = nil
+
+    @usableFromInline
+    var zoomSnapMagnetRadius: Double = 0.15
+
+    @usableFromInline
+    var zoomSnapMagnetStrength: Double = 0.4
+
+    @usableFromInline
+    var lastMagnifyScale: Double = 1.0
+
+    @usableFromInline
+    var lastMagnifyTime: Date = .now
+
+    @usableFromInline
+    var magnifyVelocity: Double = 0.0
+
     // // records the transform right before a magnification gesture starts
     @usableFromInline
     var obsoleteState = ObsoleteState(cgSize: .zero)
