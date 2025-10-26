@@ -305,7 +305,7 @@ import simd
         }
 
         @inlinable
-        private func applyVelocityAwareMagneticPull(
+        internal func applyVelocityAwareMagneticPull(
             to scale: Double,
             velocity: Double,
             snapPoints: [Double],
@@ -341,7 +341,7 @@ import simd
         }
 
         @inlinable
-        private func snapToNearest(scale: Double, snapPoints: [Double]) -> Double {
+        internal func snapToNearest(scale: Double, snapPoints: [Double]) -> Double {
             snapPoints.min(by: { abs($0 - scale) < abs($1 - scale) }) ?? scale
         }
     }
